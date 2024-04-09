@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>unicode</title>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Slab:wght@100;200;300&family=Noto+Sans+JP:wght@100&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<style>
+html {
+margin: 0;
+padding: 0;
+}
+
+body {
+margin: 0;
+padding: 0;
+font-family: "Josefin Slab", serif !important;
+font-size: 15px;
+letter-spacing: 3px;
+color: #666;
+line-height: 20px;
+text-align: center;
+}
+
+p {
+margin: 5px;
+}
+
+#conversion_wrapper {
+height: 700px;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+
+div #detected-encoding {
+color: red;
+font-size: 12px;
+}
+
+input[type="file"] {
+display: none;
+}
+
+#raw-result {
+display: none;
+}
+
+textarea {
+margin: 12px auto 0;
+min-height: 300px;
+min-width: 300px;
+max-height: 500px;
+max-width: 500px;
+border-radius: 0.5em;
+font-family: consolas, monospace;
+}
+
+#download-button, .button {
+margin: 12px auto 0;
+cursor: pointer;
+font-family: "Josefin Slab", serif !important;
+font-size: 15px;
+letter-spacing: 3px;
+text-transform: capitalize;
+padding: 10px 20px;
+color: #fff;
+border: 2px solid #fff;
+border-radius: 0px;
+background-image: -webkit-gradient(linear, left top, right top, from(#fa709a), to(#fee140));
+background-image: -webkit-linear-gradient(left, #fa709a 0%, #fee140 100%);
+background-image: linear-gradient(to right, #fa709a 0%, #fee140 100%);
+-webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, .1);
+box-shadow: 0 5px 10px rgba(0, 0, 0, .1);
+}
+</style>
+</head>
+<body>
+
+<div id="conversion_wrapper">
+<p>Character Code Converter</p>
+<div id="detected-encoding"></div>
+<textarea id="raw-result"></textarea>
+<textarea id="result"></textarea>
+<label class="button" for="file" id="upload-label">upload<input type="file" id="file"></label>
+<button id="download-button" style="display: none;">download</button>
+</div>
+
+<script src="encoding.js"></script>
+<script>
+function onFileSelect(event) {
+var file = event.target.files[0];
+var reader = new FileReader();
+reader.onload = function(e) {
+var codes = new Uint8Array(e.target.result);
+var detectedEncoding = Encoding.detect(codes);
+document.getElementById('detected-encoding').textContent = "from " + detectedEncoding + " to UNICODE";
+try {
+var rawResult = String.fromCharCode.apply(null, codes);
+var unicodeString = Encoding.convert(codes, { to: 'unicode', from: detectedEncoding, type: 'string' });
+document.getElementById('result').value = unicodeString;
+document.getElementById('upload-label').style.display = "none";
+document.getElementById('download-button').style.display = "block";
+document.getElementById('download-button').addEventListener('click', function() {
+downloadFile(unicodeString, "converted.txt");
+});
+} catch (e) {
+alert("too large to upload");
+}
+};
+reader.readAsArrayBuffer(file);
+}
+
+function downloadFile(data, fileName) {
+var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+var url = URL.createObjectURL(blob);
+var downloader = document.createElement('a');
+downloader.href = url;
+downloader.download = fileName;
+document.body.appendChild(downloader);
+downloader.click();
+document.body.removeChild(downloader);
+URL.revokeObjectURL(url);
+}
+
+document.getElementById('file').addEventListener('change', onFileSelect, false);
+</script>
+</body>
+</html>
